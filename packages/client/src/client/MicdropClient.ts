@@ -26,6 +26,7 @@ export interface MicdropEvents {
 export interface MicdropReconnectOptions {
   maxAttempts?: number
   delayMs?: number
+  connectionTimeout?: number
 }
 
 export interface MicdropOptions {
@@ -60,6 +61,7 @@ export interface MicdropState {
 const DEFAULT_RECONNECT_OPTIONS: Required<MicdropReconnectOptions> = {
   maxAttempts: Infinity,
   delayMs: 1000,
+  connectionTimeout: 5000,
 }
 
 export class MicdropClient
@@ -82,6 +84,7 @@ export class MicdropClient
   private _isReconnecting = false
   private reconnectAttempt = 0
   private reconnectTimer?: number
+  private connectionTimer?: number
 
   constructor(public options: MicdropOptions = {}) {
     super()
@@ -439,6 +442,15 @@ export class MicdropClient
       this.ws.onmessage = this.onWSMessage
       this.ws.onclose = this.onWSClose
       this.ws.onerror = this.onWSError
+
+      // Connection timeout
+      this.connectionTimer = window.setTimeout(() => {
+        this.connectionTimer = undefined
+        if (this.ws?.readyState === WebSocket.CONNECTING) {
+          this.log('WebSocket connection timeout')
+          this.ws.close()
+        }
+      }, this.options.reconnect?.connectionTimeout ?? DEFAULT_RECONNECT_OPTIONS.connectionTimeout)
     } catch (error) {
       this.setError(
         new MicdropClientError(
@@ -453,6 +465,10 @@ export class MicdropClient
 
   private onWSOpen = () => {
     this.log('WebSocket opened')
+    if (this.connectionTimer) {
+      window.clearTimeout(this.connectionTimer)
+      this.connectionTimer = undefined
+    }
     this._isReconnecting = false
     this.reconnectAttempt = 0
     this.error = undefined
@@ -554,6 +570,10 @@ export class MicdropClient
   }
 
   private stopWS() {
+    if (this.connectionTimer) {
+      window.clearTimeout(this.connectionTimer)
+      this.connectionTimer = undefined
+    }
     if (!this.ws) return
     if (
       this.ws.readyState === WebSocket.OPEN ||

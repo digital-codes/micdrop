@@ -41,8 +41,9 @@ new MicdropServer(socket, {
 | `modelId`    | `string`                       | Required | Cartesia model ID to use                               |
 | `voiceId`    | `string`                       | Required | Voice ID for speech synthesis                          |
 | `language`   | `CartesiaLanguage`             | Optional | Language code for speech                               |
-| `speed`      | `'fast' \| 'normal' \| 'slow'` | Optional | Speech speed                                           |
-| `retryDelay` | `number`                       | `1000`   | Delay in milliseconds between reconnection attempts    |
+| `speed`             | `'fast' \| 'normal' \| 'slow'` | Optional | Speech speed                                           |
+| `connectionTimeout` | `number`                       | `5000`   | Timeout in milliseconds for WebSocket connection       |
+| `retryDelay`        | `number`                       | `1000`   | Delay in milliseconds between reconnection attempts    |
 | `maxRetry`   | `number`                       | `3`      | Maximum number of reconnection attempts before failing |
 
 ### Supported Languages

@@ -47,6 +47,7 @@ await Micdrop.start({
   reconnect: {
     maxAttempts: 10, // Maximum reconnection attempts (default: Infinity)
     delayMs: 500, // Delay between reconnection attempts in ms (default: 1000)
+    connectionTimeout: 5000, // Timeout for WebSocket connection in ms (default: 5000)
   },
 })
 ```

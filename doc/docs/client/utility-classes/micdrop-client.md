@@ -68,6 +68,7 @@ You can pass options to `MicdropClient` constructor or to the `start` method:
 - `reconnect`: Automatic reconnection configuration
   - `maxAttempts`: Maximum number of reconnection attempts (default: Infinity)
   - `delayMs`: Delay between reconnection attempts in milliseconds (default: 1000)
+  - `connectionTimeout`: Timeout for WebSocket connection in milliseconds (default: 5000)
 
 ## Events
 

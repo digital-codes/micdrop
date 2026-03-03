@@ -17,6 +17,7 @@ export interface GradiumTTSOptions {
   outputFormat?: GradiumOutputFormat
   region?: GradiumRegion
   jsonConfig?: GradiumJsonConfig
+  connectionTimeout?: number
   retryDelay?: number
   maxRetry?: number
 }

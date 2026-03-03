@@ -42,8 +42,9 @@ new MicdropServer(socket, {
 | `modelName`    | `string`              | `'default'`   | Model name to use for speech synthesis                 |
 | `outputFormat` | `GradiumOutputFormat` | `'pcm_16000'` | Audio output format                                    |
 | `region`       | `'eu' \| 'us'`       | `'eu'`        | API region (EU or US endpoint)                         |
-| `jsonConfig`   | `GradiumJsonConfig`   | Optional      | Advanced voice configuration                           |
-| `retryDelay`   | `number`              | `1000`        | Delay in milliseconds between reconnection attempts    |
+| `jsonConfig`        | `GradiumJsonConfig`   | Optional      | Advanced voice configuration                           |
+| `connectionTimeout` | `number`              | `5000`        | Timeout in milliseconds for WebSocket connection       |
+| `retryDelay`        | `number`              | `1000`        | Delay in milliseconds between reconnection attempts    |
 | `maxRetry`     | `number`              | `3`           | Maximum number of reconnection attempts before failing |
 
 ### Output Formats

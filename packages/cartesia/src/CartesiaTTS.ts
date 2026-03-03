@@ -14,10 +14,12 @@ export interface CartesiaTTSOptions {
   voiceId: string
   language?: CartesiaLanguage
   speed?: 'fast' | 'normal' | 'slow'
+  connectionTimeout?: number
   retryDelay?: number
   maxRetry?: number
 }
 
+const DEFAULT_CONNECTION_TIMEOUT = 5000
 const DEFAULT_RETRY_DELAY = 1000
 const DEFAULT_MAX_RETRY = 3
 export class CartesiaTTS extends TTS {
@@ -136,22 +138,34 @@ export class CartesiaTTS extends TTS {
 
   // Connect to Cartesia
   private async initWS() {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       const socket = new WebSocket(
         `wss://api.cartesia.ai/tts/websocket?api_key=${this.options.apiKey}&cartesia_version=2025-04-16`
       )
       this.socket = socket
 
+      const timeout = setTimeout(() => {
+        this.log('Connection timeout')
+        socket.removeAllListeners()
+        socket.close()
+        this.socket = undefined
+        reject(new Error('WebSocket connection timeout'))
+      }, this.options.connectionTimeout ?? DEFAULT_CONNECTION_TIMEOUT)
+
       socket.addEventListener('open', () => {
+        clearTimeout(timeout)
         this.log('Connection opened')
         resolve()
       })
 
       socket.addEventListener('error', (error) => {
+        clearTimeout(timeout)
         this.log('WebSocket error:', error)
+        reject(new Error('WebSocket connection error'))
       })
 
       socket.addEventListener('close', ({ code, reason }) => {
+        clearTimeout(timeout)
         this.socket?.removeAllListeners()
         this.socket = undefined
         this.isProcessing = false

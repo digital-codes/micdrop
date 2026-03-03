@@ -15,6 +15,7 @@ import {
 
 // API Reference: https://gradium.ai/api_docs.html
 
+const DEFAULT_CONNECTION_TIMEOUT = 5000
 const DEFAULT_RETRY_DELAY = 1000
 const DEFAULT_MAX_RETRY = 3
 
@@ -126,13 +127,21 @@ export class GradiumTTS extends TTS {
   }
 
   private async initWS() {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       const socket = new WebSocket(this.getEndpoint(), {
         headers: {
           'x-api-key': this.options.apiKey,
         },
       })
       this.socket = socket
+
+      const timeout = setTimeout(() => {
+        this.log('Connection timeout')
+        socket.removeAllListeners()
+        socket.close()
+        this.socket = undefined
+        reject(new Error('WebSocket connection timeout'))
+      }, this.options.connectionTimeout ?? DEFAULT_CONNECTION_TIMEOUT)
 
       socket.addEventListener('open', () => {
         this.log('Connection opened')
@@ -151,10 +160,13 @@ export class GradiumTTS extends TTS {
       })
 
       socket.addEventListener('error', (error) => {
+        clearTimeout(timeout)
         this.log('WebSocket error:', error)
+        reject(new Error('WebSocket connection error'))
       })
 
       socket.addEventListener('close', ({ code, reason }) => {
+        clearTimeout(timeout)
         this.socket?.removeAllListeners()
         this.socket = undefined
 
@@ -175,6 +187,7 @@ export class GradiumTTS extends TTS {
 
           switch (message.type) {
             case 'ready':
+              clearTimeout(timeout)
               this.log('Server ready')
               resolve()
               break

@@ -138,6 +138,7 @@ new MicdropServer(socket, {
 | `model`                | `string` | `'gpt-4o-transcribe'`                           | Real-time transcription model to use                     |
 | `language`             | `string` | `'en'`                                          | Language code for transcription                          |
 | `prompt`               | `string` | `'Transcribe the incoming audio in real time.'` | Custom prompt to guide transcription behavior            |
+| `connectionTimeout`    | `number` | `5000`                                          | Timeout in milliseconds for WebSocket connection         |
 | `transcriptionTimeout` | `number` | `4000`                                          | Timeout in milliseconds to wait for transcription result |
 | `retryDelay`           | `number` | `1000`                                          | Delay in milliseconds between reconnection attempts      |
 | `maxRetry`             | `number` | `3`                                             | Maximum number of reconnection attempts before failing   |

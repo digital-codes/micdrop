@@ -12,6 +12,7 @@ import {
 // API Reference: https://elevenlabs.io/docs/api-reference/text-to-speech/v-1-text-to-speech-voice-id-stream-input
 
 const WS_INACTIVITY_TIMEOUT = 180
+const DEFAULT_CONNECTION_TIMEOUT = 5000
 const DEFAULT_RETRY_DELAY = 1000
 const DEFAULT_MAX_RETRY = 3
 
@@ -116,7 +117,7 @@ export class ElevenLabsTTS extends TTS {
   }
 
   private initWS(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       // Build query params
       const params = new URLSearchParams()
       params.append('model_id', this.options.modelId ?? DEFAULT_MODEL_ID)
@@ -143,7 +144,16 @@ export class ElevenLabsTTS extends TTS {
       })
       this.socket = socket
 
+      const timeout = setTimeout(() => {
+        this.log('Connection timeout')
+        socket.removeAllListeners()
+        socket.close()
+        this.socket = undefined
+        reject(new Error('WebSocket connection timeout'))
+      }, this.options.connectionTimeout ?? DEFAULT_CONNECTION_TIMEOUT)
+
       socket.addEventListener('open', () => {
+        clearTimeout(timeout)
         this.log('Connection opened')
 
         // Send initialization / keep-alive message with voice settings
@@ -169,7 +179,9 @@ export class ElevenLabsTTS extends TTS {
       })
 
       socket.addEventListener('error', (error) => {
+        clearTimeout(timeout)
         this.log('WebSocket error:', error)
+        reject(new Error('WebSocket connection error'))
       })
 
       socket.addEventListener('message', (event) => {
@@ -183,6 +195,7 @@ export class ElevenLabsTTS extends TTS {
       })
 
       socket.addEventListener('close', ({ code, reason }) => {
+        clearTimeout(timeout)
         this.socket?.removeAllListeners()
         this.socket = undefined
         this.isProcessing = false

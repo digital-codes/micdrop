@@ -10,6 +10,7 @@ export interface ElevenLabsTTSOptions {
   language?: string
   outputFormat?: TextToSpeechStreamRequestOutputFormat
   voiceSettings?: VoiceSettings
+  connectionTimeout?: number
   retryDelay?: number
   maxRetry?: number
 }

@@ -13,6 +13,7 @@ export interface OpenaiSTTOptions {
   model?: string
   language?: string
   prompt?: string
+  connectionTimeout?: number
   transcriptionTimeout?: number
   retryDelay?: number
   maxRetry?: number
@@ -22,6 +23,7 @@ const DEFAULT_MODEL = 'gpt-4o-transcribe'
 const DEFAULT_LANGUAGE = 'en'
 const SAMPLE_RATE = 16000
 const BIT_DEPTH = 16
+const DEFAULT_CONNECTION_TIMEOUT = 5000
 const DEFAULT_TRANSCRIPTION_TIMEOUT = 4000
 const DEFAULT_RETRY_DELAY = 1000
 const DEFAULT_MAX_RETRY = 3
@@ -147,7 +149,7 @@ export class OpenaiSTT extends STT {
   }
 
   private async initWS(): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       const socket = new WebSocket('wss://api.openai.com/v1/realtime', {
         headers: {
           Authorization: `Bearer ${this.ephemeralToken}`,
@@ -156,18 +158,30 @@ export class OpenaiSTT extends STT {
       })
       this.socket = socket
 
+      const timeout = setTimeout(() => {
+        this.log('Connection timeout')
+        socket.removeAllListeners()
+        socket.close()
+        this.socket = undefined
+        reject(new Error('WebSocket connection timeout'))
+      }, this.options.connectionTimeout ?? DEFAULT_CONNECTION_TIMEOUT)
+
       socket.addEventListener('open', () => {
+        clearTimeout(timeout)
         this.log('Connection opened')
         resolve()
       })
 
       socket.addEventListener('error', (error: any) => {
+        clearTimeout(timeout)
         this.log('WebSocket error:', error)
+        reject(new Error('WebSocket connection error'))
       })
 
       socket.addEventListener(
         'close',
         ({ code, reason }: { code: number; reason: string }) => {
+          clearTimeout(timeout)
           this.socket?.removeAllListeners()
           this.socket = undefined
 
